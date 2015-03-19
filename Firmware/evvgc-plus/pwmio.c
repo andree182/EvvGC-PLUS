@@ -18,6 +18,7 @@
 #include "hal.h"
 
 #include "pwmio.h"
+#include "misc.h"
 
 #include <math.h>
 #include <string.h>
@@ -78,6 +79,16 @@
  */
 #define ADC_GRP_NUM_CHANNELS    0x02
 #define ADC_GRP_BUF_DEPTH       0x20
+#define ADC_VALUE_MIN           0x0000
+#define ADC_VALUE_MAX           0x0FFF
+#define ADC_VALUE_MID           ( ADC_VALUE_MIN + ADC_VALUE_MAX ) / 2
+
+/**
+ * Input capture related constants.
+ */
+#define ICU_VALUE_MIN           0x0320    // 800 us;
+#define ICU_VALUE_MAX           0x0898    // 2200 us;
+#define ICU_VALUE_MID           ( ICU_VALUE_MIN + ICU_VALUE_MAX ) / 2
 
 /**
  * Separation angle between phases.
@@ -149,7 +160,13 @@ MixedInputStruct g_mixedInput[3] = {
 /**
  * Values of the input channels.
  */
-int16_t g_inputValues[5] = {0};
+int16_t g_inputValues[5] = {
+  ADC_VALUE_MID,
+  ADC_VALUE_MID,
+  ICU_VALUE_MID,
+  ICU_VALUE_MID,
+  ICU_VALUE_MID
+};
 
 /**
  * PWM configuration structure for TIM1 and TIM8 output.
@@ -325,10 +342,11 @@ static void adccb(ADCDriver *adcp, adcsample_t *buffer, size_t n) {
  * @return none.
  */
 static void icuwidthcb(ICUDriver *icup, icuchannel_t channel) {
-  if (&ICUD2 == icup) {
-    g_inputValues[INPUT_CHANNEL_AUX3] = icuGetWidth(icup, channel);
-  } else {
-    g_inputValues[INPUT_CHANNEL_AUX4 + channel] = icuGetWidth(icup, channel);
+  uint16_t value = icuGetWidth(icup, channel);
+  if (icup == &ICUD2) {
+    g_inputValues[INPUT_CHANNEL_AUX3] = constrain(value, ICU_VALUE_MIN, ICU_VALUE_MAX);
+  } else { /* &ICUD3 */
+    g_inputValues[INPUT_CHANNEL_AUX4 + channel] = constrain(value, ICU_VALUE_MIN, ICU_VALUE_MAX);
   }
 }
 
