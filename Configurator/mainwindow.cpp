@@ -6,10 +6,10 @@
 #include <QDebug>
 
 static PIDSettings PID[3] = {
-/*   P, I, D */
-    {0, 0, 0},  /* Pitch */
-    {0, 0, 0},  /* Roll  */
-    {0, 0, 0}   /* Yaw   */
+/*   P, I, D, F */
+    {0, 0, 0, 0},  /* Pitch */
+    {0, 0, 0, 0},  /* Roll  */
+    {0, 0, 0, 0}   /* Yaw   */
 };
 
 static OutputSettings outSettings[3] = {
@@ -75,9 +75,9 @@ static quint8 sensorSettings[3] = {
 };
 
 static quint8 sensorAxes[3] = {
-    3, /* Right axis -X; */
-    4, /* Front axis -Y; */
-    2  /* Top axis   +Z; */
+    0x33, /* Right axis -X; */
+    0x44, /* Front axis -Y; */
+    0x22  /* Top axis   +Z; */
 };
 
 /* Axes mapping matrix. */
@@ -350,9 +350,9 @@ void MainWindow::HandleApplySettings()
 
     if (GetStabilizationSettings()) {
         /* Write stabilization settings; */
-        qDebug() << "Pitch P:" << PID[0].P << "I:" << PID[0].I << "D:" << PID[0].D;
-        qDebug() << "Roll  P:" << PID[1].P << "I:" << PID[1].I << "D:" << PID[1].D;
-        qDebug() << "Yaw   P:" << PID[2].P << "I:" << PID[2].I << "D:" << PID[2].D;
+        qDebug() << "Pitch P:" << PID[0].P << "I:" << PID[0].I << "D:" << PID[0].D << "F:" << PID[0].F;
+        qDebug() << "Roll  P:" << PID[1].P << "I:" << PID[1].I << "D:" << PID[1].D << "F:" << PID[1].F;
+        qDebug() << "Yaw   P:" << PID[2].P << "I:" << PID[2].I << "D:" << PID[2].D << "F:" << PID[2].F;
         qDebug() << "Size:" << sizeof(PID);
 
         /* Clean data buffer for zero-padded crc32 checksum calculation. */
@@ -433,12 +433,18 @@ void MainWindow::HandleApplySettings()
 
     if (GetSensorSettings()) {
         /* Write sensor settings; */
-        qDebug() << "FRONT id:" << (sensorSettings[0] & SENSOR1_AXIS_ID_MASK)\
+        qDebug() << "S1 FRONT id:" << (sensorSettings[0] & SENSOR1_AXIS_ID_MASK)\
                  << "Positive:" << ((sensorSettings[0] & SENSOR1_AXIS_DIR_POS) > 0);
-        qDebug() << "RIGHT id:" << (sensorSettings[1] & SENSOR1_AXIS_ID_MASK)\
+        qDebug() << "S1 RIGHT id:" << (sensorSettings[1] & SENSOR1_AXIS_ID_MASK)\
                  << "Positive:" << ((sensorSettings[1] & SENSOR1_AXIS_DIR_POS) > 0);
-        qDebug() << "TOP   id:" << (sensorSettings[2] & SENSOR1_AXIS_ID_MASK)\
+        qDebug() << "S1 TOP   id:" << (sensorSettings[2] & SENSOR1_AXIS_ID_MASK)\
                  << "Positive:" << ((sensorSettings[2] & SENSOR1_AXIS_DIR_POS) > 0);
+        qDebug() << "S2 FRONT id:" << ((sensorSettings[0] & SENSOR2_AXIS_ID_MASK) >> 4)\
+                 << "Positive:" << ((sensorSettings[0] & SENSOR2_AXIS_DIR_POS) > 0);
+        qDebug() << "S2 RIGHT id:" << ((sensorSettings[1] & SENSOR2_AXIS_ID_MASK) >> 4)\
+                 << "Positive:" << ((sensorSettings[1] & SENSOR2_AXIS_DIR_POS) > 0);
+        qDebug() << "S2 TOP   id:" << ((sensorSettings[2] & SENSOR2_AXIS_ID_MASK) >> 4)\
+                 << "Positive:" << ((sensorSettings[2] & SENSOR2_AXIS_DIR_POS) > 0);
         qDebug() << "Size:" << sizeof(sensorSettings);
 
         /* Clean data buffer for zero-padded crc32 checksum calculation. */
@@ -594,27 +600,30 @@ void MainWindow::ProcessSerialMessages(const TelemetryMessage &msg)
     case 'b': /* Reads board status. */
         if ((msg.size - TELEMETRY_MSG_SIZE_BYTES) == sizeof(boardStatus)) {
             boardStatus = *(msg.data);
-            /* Check if sensor detected. */
-            if (boardStatus & 1) {
+            /* Check if sensor1 detected. */
+            if (boardStatus & MPU6050_LOW_DETECTED) {
                 ui->groupSensor1->setTitle("Sensor1 (MPU6050):");
-                ui->comboSensor1AxisTOP->setEnabled(true);
-                ui->comboSensor1AxisRIGHT->setEnabled(true);
-                ui->pushSensor1AccCalibrate->setEnabled(true);
-                ui->pushSensor1GyroCalibrate->setEnabled(true);
+                ui->groupSensor1->setEnabled(true);
             } else {
                 ui->groupSensor1->setTitle("Sensor1 (none):");
-                ui->comboSensor1AxisTOP->setEnabled(false);
-                ui->comboSensor1AxisRIGHT->setEnabled(false);
-                ui->pushSensor1AccCalibrate->setEnabled(false);
-                ui->pushSensor1GyroCalibrate->setEnabled(false);
+                ui->groupSensor1->setEnabled(false);
+            }
+            /* Check if sensor1 detected. */
+            if (boardStatus & MPU6050_HIGH_DETECTED) {
+                ui->groupSensor2->setTitle("Sensor2 (MPU6050):");
+                ui->groupSensor2->setEnabled(true);
+            } else {
+                ui->groupSensor2->setTitle("Sensor2 (none):");
+                ui->groupSensor2->setEnabled(false);
             }
             /* Check if EEPROM detected. */
-            if (boardStatus & 4) {
+            if (boardStatus & EEPROM_24C02_DETECTED) {
                 ui->actionSave->setEnabled(true);
             } else {
                 ui->actionSave->setEnabled(false);
             }
-            qDebug() << "Board status:\r\n  MPU6050 detected:" << ((boardStatus & 1) == 1) \
+            qDebug() << "Board status:\r\n  MPU6050 low detected:" << ((boardStatus & 1) == 1) \
+                     << "\r\n  MPU6050 high detected:" << ((boardStatus & 2) == 2) \
                      << "\r\n  EEPROM detected:" << ((boardStatus & 4) == 4);
         } else {
             qDebug() << "Board status size mismatch:" << (msg.size - TELEMETRY_MSG_SIZE_BYTES) \
@@ -821,6 +830,11 @@ bool MainWindow::GetStabilizationSettings()
         PID[0].D = temp;
         fUpdated = true;
     }
+    temp = ui->spinPitch_F->value();
+    if (temp != PID[0].F) {
+        PID[0].F = temp;
+        fUpdated = true;
+    }
 
     /* ROLL */
     temp = ui->spinRoll_P->value();
@@ -836,6 +850,11 @@ bool MainWindow::GetStabilizationSettings()
     temp = ui->spinRoll_D->value();
     if (temp != PID[1].D) {
         PID[1].D = temp;
+        fUpdated = true;
+    }
+    temp = ui->spinRoll_F->value();
+    if (temp != PID[1].F) {
+        PID[1].F = temp;
         fUpdated = true;
     }
 
@@ -855,6 +874,11 @@ bool MainWindow::GetStabilizationSettings()
         PID[2].D = temp;
         fUpdated = true;
     }
+    temp = ui->spinYaw_F->value();
+    if (temp != PID[2].F) {
+        PID[2].F = temp;
+        fUpdated = true;
+    }
 
     return fUpdated;
 }
@@ -869,14 +893,17 @@ bool MainWindow::SetStabilizationSettings()
     ui->spinPitch_P->setValue(PID[0].P);
     ui->spinPitch_I->setValue(PID[0].I);
     ui->spinPitch_D->setValue(PID[0].D);
+    ui->spinPitch_F->setValue(PID[0].F);
     /* ROLL */
     ui->spinRoll_P->setValue(PID[1].P);
     ui->spinRoll_I->setValue(PID[1].I);
     ui->spinRoll_D->setValue(PID[1].D);
+    ui->spinRoll_F->setValue(PID[1].F);
     /* YAW */
     ui->spinYaw_P->setValue(PID[2].P);
     ui->spinYaw_I->setValue(PID[2].I);
     ui->spinYaw_D->setValue(PID[2].D);
+    ui->spinYaw_F->setValue(PID[2].F);
     return true;
 }
 
@@ -1250,55 +1277,98 @@ bool MainWindow::SetInputModeSettings()
 bool MainWindow::GetSensorSettings()
 {
     bool fUpdated = false;
-    quint16 temp;
+    quint8 temp;
+    quint8 temp2;
 
     /* TOP axis */
     temp = ui->comboSensor1AxisTOP->currentIndex();
-    if (temp != sensorAxes[2]) {
-        sensorAxes[2] = (quint8)temp;
+    if (temp != (sensorAxes[2] & 0x0F)) {
         fUpdated = true;
     }
+    temp2 = temp;
+    temp = ui->comboSensor2AxisTOP->currentIndex() << 4;
+    if (temp != (sensorAxes[2] & 0xF0)) {
+        fUpdated = true;
+    }
+    sensorAxes[2] = temp | temp2;
+
     /* RIGHT axis */
     temp = ui->comboSensor1AxisRIGHT->currentIndex();
-    if (temp != sensorAxes[0]) {
-        sensorAxes[0] = (quint8)temp;
+    if (temp != (sensorAxes[0] & 0x0F)) {
         fUpdated = true;
     }
+    temp2 = temp;
+    temp = ui->comboSensor2AxisRIGHT->currentIndex() << 4;
+    if (temp != (sensorAxes[0] & 0xF0)) {
+        fUpdated = true;
+    }
+    sensorAxes[0] = temp | temp2;
+
     /* FRONT axis */
     if (fUpdated) {
-        sensorAxes[1] = amMtx[sensorAxes[0]][sensorAxes[2]];
-        if (sensorAxes[1] == 6) {
+        temp2 = amMtx[(sensorAxes[0] & 0x0F)][(sensorAxes[2] & 0x0F)];
+        temp  = amMtx[(sensorAxes[0] >> 4)][(sensorAxes[2] >> 4)] << 4;
+        if ((temp2 == 0x06) || (temp == 0x60)) {
             QMessageBox::critical(this, tr("Axes error"),
                 "Top and right axes of the sensor cannot be the same!");
             return false;
         }
+        sensorAxes[1] = temp | temp2;
 
         for (quint8 i = 0; i < 3; i++) {
             sensorSettings[i] = 0;
-            switch (sensorAxes[i]) {
-            case 0: // +X;
+            /* Sensor 1: */
+            switch (sensorAxes[i] & 0x0F) {
+            case 0x00: // +X;
                 // Axis ID = 0;
                 // Axis dir = negative;
                 break;
-            case 1: // +Y;
-                sensorSettings[i] |= 1;
+            case 0x01: // +Y;
+                sensorSettings[i] |= 0x01;
                 sensorSettings[i] |= SENSOR1_AXIS_DIR_POS;
                 break;
-            case 2: // +Z;
-                sensorSettings[i] |= 2;
+            case 0x02: // +Z;
+                sensorSettings[i] |= 0x02;
                 // Axis dir = negative;
                 break;
-            case 3: // -X;
+            case 0x03: // -X;
                 // Axis ID = 0;
                 sensorSettings[i] |= SENSOR1_AXIS_DIR_POS;
                 break;
-            case 4: // -Y;
-                sensorSettings[i] |= 1;
+            case 0x04: // -Y;
+                sensorSettings[i] |= 0x01;
                 // Axis dir = negative;
                 break;
-            case 5: // -Z;
-                sensorSettings[i] |= 2;
+            case 0x05: // -Z;
+                sensorSettings[i] |= 0x02;
                 sensorSettings[i] |= SENSOR1_AXIS_DIR_POS;
+                break;
+            }
+            /* Sensor 2: */
+            switch (sensorAxes[i] & 0xF0) {
+            case 0x00: // +X;
+                // Axis ID = 0;
+                // Axis dir = negative;
+                break;
+            case 0x10: // +Y;
+                sensorSettings[i] |= 0x10;
+                sensorSettings[i] |= SENSOR2_AXIS_DIR_POS;
+                break;
+            case 0x20: // +Z;
+                sensorSettings[i] |= 0x20;
+                // Axis dir = negative;
+                break;
+            case 0x30: // -X;
+                // Axis ID = 0;
+                sensorSettings[i] |= SENSOR2_AXIS_DIR_POS;
+                break;
+            case 0x40: // -Y;
+                sensorSettings[i] |= 0x10;
+                // Axis dir = negative;
+                break;
+            case 0x50: // -Z;
+                sensorSettings[i] |= 0x20;
+                sensorSettings[i] |= SENSOR2_AXIS_DIR_POS;
                 break;
             }
         }
@@ -1314,31 +1384,61 @@ bool MainWindow::GetSensorSettings()
 bool MainWindow::SetSensorSettings()
 {
     for (quint8 i = 0; i < 3; i++) {
+        sensorAxes[i] = 0x00;
+        /* Sensor 1: */
         switch (sensorSettings[i] & SENSOR1_AXIS_ID_MASK) {
-        case 0: // X;
+        case 0x00: // X;
             if (sensorSettings[i] & SENSOR1_AXIS_DIR_POS) {
-                sensorAxes[i] = 3;
+                sensorAxes[i] |= 0x03;
             } else {
-                sensorAxes[i] = 0;
+                sensorAxes[i] |= 0x00;
             }
             break;
-        case 1: // Y;
+        case 0x01: // Y;
             if (sensorSettings[i] & SENSOR1_AXIS_DIR_POS) {
-                sensorAxes[i] = 1;
+                sensorAxes[i] |= 0x01;
             } else {
-                sensorAxes[i] = 4;
+                sensorAxes[i] |= 0x04;
             }
             break;
-        case 2: // Z;
+        case 0x02: // Z;
             if (sensorSettings[i] & SENSOR1_AXIS_DIR_POS) {
-                sensorAxes[i] = 5;
+                sensorAxes[i] |= 0x05;
             } else {
-                sensorAxes[i] = 2;
+                sensorAxes[i] |= 0x02;
+            }
+            break;
+        }
+        /* Sensor 2: */
+        switch (sensorSettings[i] & SENSOR2_AXIS_ID_MASK) {
+        case 0x00: // X;
+            if (sensorSettings[i] & SENSOR2_AXIS_DIR_POS) {
+                sensorAxes[i] |= 0x30;
+            } else {
+                sensorAxes[i] |= 0x00;
+            }
+            break;
+        case 0x10: // Y;
+            if (sensorSettings[i] & SENSOR2_AXIS_DIR_POS) {
+                sensorAxes[i] |= 0x10;
+            } else {
+                sensorAxes[i] |= 0x40;
+            }
+            break;
+        case 0x20: // Z;
+            if (sensorSettings[i] & SENSOR2_AXIS_DIR_POS) {
+                sensorAxes[i] |= 0x50;
+            } else {
+                sensorAxes[i] |= 0x20;
             }
             break;
         }
     }
-    ui->comboSensor1AxisTOP->setCurrentIndex(sensorAxes[2]);
-    ui->comboSensor1AxisRIGHT->setCurrentIndex(sensorAxes[0]);
+    /* Sensor 1: */
+    ui->comboSensor1AxisTOP->setCurrentIndex(sensorAxes[2] & 0x0F);
+    ui->comboSensor1AxisRIGHT->setCurrentIndex(sensorAxes[0] & 0x0F);
+    /* Sensor 2: */
+    ui->comboSensor2AxisTOP->setCurrentIndex(sensorAxes[2] >> 4);
+    ui->comboSensor2AxisRIGHT->setCurrentIndex(sensorAxes[0] >> 4);
     return true;
 }

@@ -38,11 +38,16 @@
 #define SENSOR2_AXIS_DIR_POS    0x80
 #define SENSOR2_AXIS_ID_MASK    0x70
 
+#define MPU6050_LOW_DETECTED    0x01
+#define MPU6050_HIGH_DETECTED   0x02
+#define EEPROM_24C02_DETECTED   0x04
+
 typedef struct tagPIDSettings
 {
     quint8 P;
     quint8 I;
     quint8 D;
+    quint8 F;
 } __attribute__((packed)) PIDSettings, *PPIDSettings;
 
 typedef struct tagOutputSettings
@@ -127,8 +132,9 @@ private:
     TelemetryMessage m_msg;
     QQuaternion lastQ;
     quint32 boardStatus;
-    quint16 inputValues[5];
+    quint32 idleCPUCounter;
     float motorOffset[3];
+    quint16 inputValues[5];
 };
 
 #endif // MAINWINDOW_H

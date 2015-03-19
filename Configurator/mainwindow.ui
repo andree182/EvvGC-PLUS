@@ -31,6 +31,19 @@
         <string>Stabilization</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout">
+        <item row="0" column="3">
+         <widget class="QLabel" name="labelD">
+          <property name="text">
+           <string>D</string>
+          </property>
+          <property name="textFormat">
+           <enum>Qt::PlainText</enum>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
         <item row="4" column="0">
          <widget class="QLabel" name="labelYaw">
           <property name="sizePolicy">
@@ -41,6 +54,9 @@
           </property>
           <property name="text">
            <string>Yaw:</string>
+          </property>
+          <property name="textFormat">
+           <enum>Qt::PlainText</enum>
           </property>
          </widget>
         </item>
@@ -79,6 +95,9 @@
           <property name="text">
            <string>P</string>
           </property>
+          <property name="textFormat">
+           <enum>Qt::PlainText</enum>
+          </property>
           <property name="alignment">
            <set>Qt::AlignCenter</set>
           </property>
@@ -89,6 +108,9 @@
           <property name="text">
            <string>I</string>
           </property>
+          <property name="textFormat">
+           <enum>Qt::PlainText</enum>
+          </property>
           <property name="alignment">
            <set>Qt::AlignCenter</set>
           </property>
@@ -98,16 +120,6 @@
          <widget class="QSpinBox" name="spinYaw_I">
           <property name="maximum">
            <number>255</number>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="3">
-         <widget class="QLabel" name="labelD">
-          <property name="text">
-           <string>D</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
           </property>
          </widget>
         </item>
@@ -122,6 +134,9 @@
           <property name="text">
            <string>Roll:</string>
           </property>
+          <property name="textFormat">
+           <enum>Qt::PlainText</enum>
+          </property>
          </widget>
         </item>
         <item row="2" column="0">
@@ -134,6 +149,9 @@
           </property>
           <property name="text">
            <string>Pitch:</string>
+          </property>
+          <property name="textFormat">
+           <enum>Qt::PlainText</enum>
           </property>
          </widget>
         </item>
@@ -176,6 +194,40 @@
          <widget class="QSpinBox" name="spinPitch_D">
           <property name="maximum">
            <number>255</number>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="4">
+         <widget class="QSpinBox" name="spinPitch_F">
+          <property name="maximum">
+           <number>255</number>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="4">
+         <widget class="QSpinBox" name="spinRoll_F">
+          <property name="maximum">
+           <number>255</number>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="4">
+         <widget class="QSpinBox" name="spinYaw_F">
+          <property name="maximum">
+           <number>255</number>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="4">
+         <widget class="QLabel" name="labelFF">
+          <property name="text">
+           <string>Feed Forward, %</string>
+          </property>
+          <property name="textFormat">
+           <enum>Qt::PlainText</enum>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
           </property>
          </widget>
         </item>
@@ -1310,6 +1362,9 @@
        <layout class="QGridLayout" name="gridLayout_5">
         <item row="0" column="0">
          <widget class="QGroupBox" name="groupSensor1">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
           <property name="title">
            <string>Sensor1 (none):</string>
           </property>
@@ -1317,7 +1372,7 @@
            <item row="0" column="1">
             <widget class="QComboBox" name="comboSensor1AxisTOP">
              <property name="enabled">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
              <item>
               <property name="text">
@@ -1354,7 +1409,7 @@
            <item row="1" column="1">
             <widget class="QComboBox" name="comboSensor1AxisRIGHT">
              <property name="enabled">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
              <item>
               <property name="text">
@@ -1405,7 +1460,7 @@
            <item row="2" column="0" colspan="2">
             <widget class="QPushButton" name="pushSensor1AccCalibrate">
              <property name="enabled">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
              <property name="text">
               <string>Accel Calibrate</string>
@@ -1415,7 +1470,7 @@
            <item row="3" column="0" colspan="2">
             <widget class="QPushButton" name="pushSensor1GyroCalibrate">
              <property name="enabled">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
              <property name="text">
               <string>Gyro Calibrate</string>
@@ -1453,14 +1508,23 @@
         </item>
         <item row="0" column="1">
          <widget class="QGroupBox" name="groupSensor2">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
           <property name="title">
            <string>Sensor2 (none):</string>
+          </property>
+          <property name="checkable">
+           <bool>false</bool>
+          </property>
+          <property name="checked">
+           <bool>false</bool>
           </property>
           <layout class="QGridLayout" name="gridLayout_7">
            <item row="0" column="1">
             <widget class="QComboBox" name="comboSensor2AxisTOP">
              <property name="enabled">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
              <item>
               <property name="text">
@@ -1511,7 +1575,7 @@
            <item row="1" column="1">
             <widget class="QComboBox" name="comboSensor2AxisRIGHT">
              <property name="enabled">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
              <item>
               <property name="text">
@@ -1548,7 +1612,7 @@
            <item row="4" column="0" colspan="2">
             <widget class="QPushButton" name="pushSensor2AccCalibrate">
              <property name="enabled">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
              <property name="text">
               <string>Accel Calibrate</string>
@@ -1558,7 +1622,7 @@
            <item row="5" column="0" colspan="2">
             <widget class="QPushButton" name="pushSensor2GyroCalibrate">
              <property name="enabled">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
              <property name="text">
               <string>Gyro Calibrate</string>
@@ -1755,28 +1819,35 @@
   </customwidget>
  </customwidgets>
  <tabstops>
+  <tabstop>tabWidget</tabstop>
   <tabstop>spinPitch_P</tabstop>
   <tabstop>spinPitch_I</tabstop>
   <tabstop>spinPitch_D</tabstop>
+  <tabstop>spinPitch_F</tabstop>
   <tabstop>spinRoll_P</tabstop>
   <tabstop>spinRoll_I</tabstop>
   <tabstop>spinRoll_D</tabstop>
+  <tabstop>spinRoll_F</tabstop>
   <tabstop>spinYaw_P</tabstop>
   <tabstop>spinYaw_I</tabstop>
   <tabstop>spinYaw_D</tabstop>
+  <tabstop>spinYaw_F</tabstop>
   <tabstop>spinPitchPower</tabstop>
   <tabstop>spinPitchNumPoles</tabstop>
   <tabstop>checkPitchRev</tabstop>
+  <tabstop>checkPitchTHIEnable</tabstop>
   <tabstop>comboPitchCommand</tabstop>
   <tabstop>comboPitchDeadTime</tabstop>
   <tabstop>spinRollPower</tabstop>
   <tabstop>spinRollNumPoles</tabstop>
   <tabstop>checkRollRev</tabstop>
+  <tabstop>checkRollTHIEnable</tabstop>
   <tabstop>comboRollCommand</tabstop>
   <tabstop>comboRollDeadTime</tabstop>
   <tabstop>spinYawPower</tabstop>
   <tabstop>spinYawNumPoles</tabstop>
   <tabstop>checkYawRev</tabstop>
+  <tabstop>checkYawTHIEnable</tabstop>
   <tabstop>comboYawCommand</tabstop>
   <tabstop>comboYawDeadTime</tabstop>
   <tabstop>comboInputChannelPitch</tabstop>
@@ -1806,6 +1877,14 @@
   <tabstop>spinInputMaxAngleYaw</tabstop>
   <tabstop>spinInputSpeedYaw</tabstop>
   <tabstop>spinInputOffsetYaw</tabstop>
+  <tabstop>comboSensor1AxisTOP</tabstop>
+  <tabstop>comboSensor1AxisRIGHT</tabstop>
+  <tabstop>pushSensor1AccCalibrate</tabstop>
+  <tabstop>pushSensor1GyroCalibrate</tabstop>
+  <tabstop>comboSensor2AxisTOP</tabstop>
+  <tabstop>comboSensor2AxisRIGHT</tabstop>
+  <tabstop>pushSensor2AccCalibrate</tabstop>
+  <tabstop>pushSensor2GyroCalibrate</tabstop>
   <tabstop>checkDataX</tabstop>
   <tabstop>checkDataY</tabstop>
   <tabstop>checkDataZ</tabstop>
