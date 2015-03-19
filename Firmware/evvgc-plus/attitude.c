@@ -38,13 +38,13 @@
 #include "attitude.h"
 #include "pwmio.h"
 
-#define FIXED_DT_STEP             0.0015f
+#define FIXED_DT_STEP             0.002f
 
 #define MOTOR_STEP_LIMIT_MAX      M_PI / 45.0f
 #define MOTOR_STEP_LIMIT_MIN      -MOTOR_STEP_LIMIT_MAX
 
 #define ACCEL_TAU                 0.1f
-#define INPUT_SIGNAL_ALPHA        300.0f
+#define INPUT_SIGNAL_ALPHA        266.7f
 #define MODE_FOLLOW_DEAD_BAND     M_PI / 36.0f
 
 /* PID controller structure. */
@@ -52,9 +52,11 @@ typedef struct tagPIDStruct {
   float P;
   float I;
   float D;
-  float prevDist;
+  float F;
+  float prevDistance;
   float prevSpeed;
-  float prevCmd;
+  float prevDisturbance;
+  float prevCommand;
 } __attribute__((packed)) PIDStruct, *PPIDStruct;
 
 /**
@@ -64,13 +66,13 @@ typedef struct tagPIDStruct {
 float g_motorOffset[3] = {0.0f, 0.0f, 0.0f};
 
 /**
- * Default PID settings.
+ * Default closed loop with feed forward settings.
  */
 PIDSettings g_pidSettings[3] = {
-/* P, I, D */
-  {0, 0, 0}, /* Pitch PID */
-  {0, 0, 0}, /* Roll  PID */
-  {0, 0, 0}, /* Yaw   PID */
+/* P, I, D, F */
+  {0, 0, 0, 0}, /* Pitch PID */
+  {0, 0, 0, 0}, /* Roll  PID */
+  {0, 0, 0, 0}, /* Yaw   PID */
 };
 
 /**
@@ -109,37 +111,40 @@ static float accel_alpha = 0.0f;
 
 /* PID controller parameters. */
 static PIDStruct PID[3] = {
-  {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
-  {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
-  {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}
+  {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+  {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+  {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}
 };
 
 /**
- * @brief  Implements basic PID stabilization of the motor speed.
+ * @brief  Implements basic PID stabilization of the motor speed with feed forward.
  * @param  cmd_id - command id to apply PID action to.
  * @param  sp - set-point value.
  * @param  pv - process variable value.
+ * @param  d - disturbance value from the 2nd IMU.
  * @return weighted sum of P, I and D actions.
  */
-static float pidControllerApply(uint8_t cmd_id, float sp, float pv) {
+static float pidControllerApply(uint8_t cmd_id, float sp, float pv, float d) {
   float poles2 = (float)(g_pwmOutput[cmd_id].num_poles >> 1);
   /* Distance for the motor to travel: */
-  float dist = circadjust(sp - pv, M_PI);
+  float distance = circadjust(sp - pv, M_PI);
   /* Convert mechanical distance to electrical distance: */
-  dist *= poles2;
+  distance *= poles2;
   /* If there is a distance to travel then rotate the motor in small steps: */
-  float step = constrain(dist*PID[cmd_id].I, MOTOR_STEP_LIMIT_MIN, MOTOR_STEP_LIMIT_MAX);
+  float step = constrain(distance*PID[cmd_id].I, MOTOR_STEP_LIMIT_MIN, MOTOR_STEP_LIMIT_MAX);
   /* Calculate proportional speed of the motor: */
-  float speed = dist - PID[cmd_id].prevDist;
+  float speed = distance - PID[cmd_id].prevDistance;
   step += speed*PID[cmd_id].P;
   /* Account for the acceleration of the motor: */
   step += (speed - PID[cmd_id].prevSpeed)*PID[cmd_id].D;
+  /* Account for the disturbance value (only if the 2nd IMU is enabled): */
+  step += (PID[cmd_id].prevDisturbance - d)*PID[cmd_id].F*poles2;
   /* Update offset of the motor: */
   g_motorOffset[cmd_id] += step / poles2;
   /* Wind-up guard limits motor offset range to one mechanical rotation: */
   g_motorOffset[cmd_id] = circadjust(g_motorOffset[cmd_id], M_PI);
   /* Update motor position: */
-  float cmd = PID[cmd_id].prevCmd + step;
+  float cmd = PID[cmd_id].prevCommand + step;
   /* Normalize command to -M_PI..M_PI range: */
   if (cmd < 0.0f) {
     cmd = fmodf(cmd - M_PI, -M_TWOPI) + M_PI;
@@ -147,9 +152,10 @@ static float pidControllerApply(uint8_t cmd_id, float sp, float pv) {
     cmd = fmodf(cmd + M_PI,  M_TWOPI) - M_PI;
   }
   /* Save values for the next iteration: */
-  PID[cmd_id].prevDist = dist;
-  PID[cmd_id].prevSpeed = speed;
-  PID[cmd_id].prevCmd = cmd;
+  PID[cmd_id].prevDistance    = distance;
+  PID[cmd_id].prevSpeed       = speed;
+  PID[cmd_id].prevDisturbance = d;
+  PID[cmd_id].prevCommand     = cmd;
   return cmd;
 }
 
@@ -162,6 +168,7 @@ static void pidUpdateStruct(void) {
     PID[i].P = (float)g_pidSettings[i].P*0.1f;
     PID[i].I = (float)g_pidSettings[i].I*0.01f;
     PID[i].D = (float)g_pidSettings[i].D*1.0f;
+    PID[i].F = (float)g_pidSettings[i].F*0.01f;
     if (!g_pidSettings[i].I) {
       g_motorOffset[i] = 0.0f;
     }
@@ -331,21 +338,21 @@ void actuatorsUpdate(void) {
   /* Pitch: */
   uint8_t cmd_id = g_pwmOutput[PWM_OUT_PITCH].dt_cmd_id & PWM_OUT_CMD_ID_MASK;
   if (cmd_id != PWM_OUT_CMD_DISABLED) {
-    cmd = pidControllerApply(cmd_id, camRot[cmd_id], g_IMU1.rpy[cmd_id]);
+    cmd = pidControllerApply(cmd_id, camRot[cmd_id], g_IMU1.rpy[cmd_id], g_IMU2.rpy[cmd_id]);
   }
   pwmOutputUpdate(PWM_OUT_PITCH, cmd);
   cmd = 0.0f;
   /* Roll: */
   cmd_id = g_pwmOutput[PWM_OUT_ROLL].dt_cmd_id & PWM_OUT_CMD_ID_MASK;
   if (cmd_id != PWM_OUT_CMD_DISABLED) {
-    cmd = pidControllerApply(cmd_id, camRot[cmd_id], g_IMU1.rpy[cmd_id]);
+    cmd = pidControllerApply(cmd_id, camRot[cmd_id], g_IMU1.rpy[cmd_id], g_IMU2.rpy[cmd_id]);
   }
   pwmOutputUpdate(PWM_OUT_ROLL, cmd);
   cmd = 0.0f;
   /* Yaw: */
   cmd_id = g_pwmOutput[PWM_OUT_YAW].dt_cmd_id & PWM_OUT_CMD_ID_MASK;
   if (cmd_id != PWM_OUT_CMD_DISABLED) {
-    cmd = pidControllerApply(cmd_id, camRot[cmd_id], g_IMU1.rpy[cmd_id]);
+    cmd = pidControllerApply(cmd_id, camRot[cmd_id], g_IMU1.rpy[cmd_id], g_IMU2.rpy[cmd_id]);
   }
   pwmOutputUpdate(PWM_OUT_YAW, cmd);
 }

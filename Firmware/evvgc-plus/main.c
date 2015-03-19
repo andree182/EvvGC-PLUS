@@ -74,7 +74,7 @@ static msg_t BlinkerThread(void *arg) {
  * MPU6050 data polling thread. Times are in milliseconds.
  * This thread requests a new data from MPU6050 every 1.5 ms (@666 Hz).
  */
-static WORKING_AREA(waPollMPU6050Thread, 128);
+static WORKING_AREA(waPollMPU6050Thread, 256);
 static msg_t PollMPU6050Thread(void *arg) {
   systime_t time;
   (void)arg;
@@ -87,7 +87,7 @@ static msg_t PollMPU6050Thread(void *arg) {
       chBSemSignal(&bsemIMU2DataReady);
     }
     /* Wait until the next 1.5 milliseconds passes. */
-    chThdSleepUntil(time += US2ST(1500));
+    chThdSleepUntil(time += US2ST(2000));
   }
   /* This point should never be reached. */
   return 0;
@@ -99,7 +99,7 @@ static msg_t PollMPU6050Thread(void *arg) {
  * - This thread is synchronized by PollMPU6050Thread thread.
  * - This thread has the highest priority level.
  */
-static WORKING_AREA(waAttitudeThread, 2048);
+static WORKING_AREA(waAttitudeThread, 4096);
 static msg_t AttitudeThread(void *arg) {
   (void)arg;
   attitudeInit();

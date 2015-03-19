@@ -40,16 +40,16 @@
 #define EEPROM_START_ADDR       0x00
 
 typedef struct tagEEPROMStruct {
-  PIDSettings pidSettings[3];       /*  9 bytes */
+  PIDSettings pidSettings[3];       /* 12 bytes */
   PWMOutputStruct pwmOutput[3];     /* 12 bytes */
   MixedInputStruct mixedInput[3];   /* 21 byte  */
-  InputModeStruct modeSettings[3];  /* 24 bytes */
   uint8_t sensorSettings[3];        /*  3 bytes */
+  InputModeStruct modeSettings[3];  /* 24 bytes */
   float accelBias[3];               /* 12 bytes */
   float gyroBias[3];                /* 12 bytes */
   uint32_t crc32;                   /*  4 bytes */
-/* TOTAL:                              97 bytes */
-/* Bytes left:                        159 bytes */
+/* TOTAL:                             100 bytes */
+/* Bytes left:                        156 bytes */
 } __attribute__((packed)) EEPROMStruct, *PEEPROMStruct;
 
 /**
@@ -175,7 +175,7 @@ uint8_t eepromLoadSettings(void) {
     pwmOutputSettingsUpdate(eepromData.pwmOutput);
     mixedInputSettingsUpdate(eepromData.mixedInput);
     inputModeSettingsUpdate(eepromData.modeSettings);
-    sensorSettingsUpdate(eepromData.sensorSettings);
+    //sensorSettingsUpdate(eepromData.sensorSettings);
     accelBiasUpdate(&g_IMU1, eepromData.accelBias);
     gyroBiasUpdate(&g_IMU1, eepromData.gyroBias);
   }

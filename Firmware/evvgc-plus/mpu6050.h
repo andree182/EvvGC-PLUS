@@ -77,8 +77,8 @@ typedef struct tagIMUStruct {
   float grotFiltered[3];  /* Filtered direction of gravity.  */
   float qIMU[4];          /* Attitude quaternion of the IMU. */
   float rpy[3];           /* Attitude in Euler angles.       */
-  uint8_t addr;           /* I2C address of the chip.        */
   uint8_t axes_conf[3];   /* Configuration of IMU axes.      */
+  uint8_t addr;           /* I2C address of the chip.        */
   uint16_t calCounter;    /* Calibration counter             */
   uint16_t flags;         /* Flags.                          */
 } __attribute__((packed)) IMUStruct, *PIMUStruct;

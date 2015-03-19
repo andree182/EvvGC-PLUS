@@ -24,9 +24,10 @@
 #define INPUT_MODE_FOLLOW     0x02
 
 typedef struct tagPIDSettings {
-  uint8_t P;
-  uint8_t I;
-  uint8_t D;
+  uint8_t P;  /* Coefficient for P term calculation. */
+  uint8_t I;  /* Coefficient for I term calculation. */
+  uint8_t D;  /* Coefficient for D term calculation. */
+  uint8_t F;  /* Coefficient for feed forward calculation. */
 } __attribute__((packed)) PIDSettings, *PPIDSettings;
 
 typedef struct tagInputModeStruct {
