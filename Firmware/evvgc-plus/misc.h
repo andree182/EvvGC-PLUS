@@ -64,6 +64,19 @@ static inline void CrossProduct(const float v1[3], const float v2[3], float res[
 }
 
 /**
+ * @brief Multiply two quaternions into a third.
+ * @param q - first quaternion;
+ * @param r - second quaternion;
+ * @param v - output quaternion.
+ */
+static inline void quat_mult(const float r[4], const float q[4], float v[4]) {
+  v[0] = r[0]*q[0] - r[1]*q[1] - r[2]*q[2] - r[3]*q[3];
+  v[1] = r[0]*q[1] + r[1]*q[0] + r[2]*q[3] - r[3]*q[2];
+  v[2] = r[0]*q[2] - r[1]*q[3] + r[2]*q[0] + r[3]*q[1];
+  v[3] = r[0]*q[3] + r[1]*q[2] - r[2]*q[1] + r[3]*q[0];
+}
+
+/**
  * @brief Find quaternion from roll, pitch and yaw.
  * @note  The order of rotations is:
  *        1. pitch (X);

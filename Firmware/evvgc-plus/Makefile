@@ -86,8 +86,6 @@ CSRC = $(PORTSRC) \
        $(HALSRC) \
        $(PLATFORMSRC) \
        $(BOARDSRC) \
-       $(FIXMATHSRC) \
-       $(FIXMATRIXSRC) \
        attitude.c \
        eeprom.c \
        main.c \
