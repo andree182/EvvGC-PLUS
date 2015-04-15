@@ -749,7 +749,7 @@
            </sizepolicy>
           </property>
           <property name="toolTip">
-           <string>Third Harmonic Injection, incraeses efficiency by ~14%</string>
+           <string>Third Harmonic Injection, increases efficiency by ~14%</string>
           </property>
           <property name="text">
            <string>THI</string>
@@ -765,7 +765,7 @@
            </sizepolicy>
           </property>
           <property name="toolTip">
-           <string>Third Harmonic Injection, incraeses efficiency by ~14%</string>
+           <string>Third Harmonic Injection, increases efficiency by ~14%</string>
           </property>
           <property name="text">
            <string>THI</string>
@@ -781,7 +781,7 @@
            </sizepolicy>
           </property>
           <property name="toolTip">
-           <string>Third Harmonic Injection, incraeses efficiency by ~14%</string>
+           <string>Third Harmonic Injection, increases efficiency by ~14%</string>
           </property>
           <property name="text">
            <string>THI</string>
