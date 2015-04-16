@@ -546,6 +546,18 @@ void pwmOutputStart(void) {
 }
 
 /**
+ * @brief  Stops the PWM output.
+ * @return none.
+ */
+void pwmOutputStop(void) {
+  pwmOutputDisableAll();
+  pwmStop(&PWMD1);
+  pwmStop(&PWMD8);
+  pwmStop(&PWMD4);
+  pwmStop(&PWMD5);
+}
+
+/**
  * @brief  Updates specified PWM output channel driver state
  *         according to the given command.
  * @param  channel_id - PWM output channel ID.
@@ -620,6 +632,16 @@ void mixedInputStart(void) {
   adcStart(&ADCD1, NULL);
   /* Starts an ADC continuous conversion. */
   adcStartConversion(&ADCD1, &adcgrpcfg, adcBuf, ADC_GRP_BUF_DEPTH);
+}
+
+/**
+ * @brief  Stops the ADC and ICU input drivers.
+ * @return none.
+ */
+void mixedInputStop(void) {
+  icuStop(&ICUD2);
+  icuStop(&ICUD3);
+  adcStop(&ADCD1);
 }
 
 /**

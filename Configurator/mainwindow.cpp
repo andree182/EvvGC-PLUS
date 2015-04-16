@@ -146,6 +146,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionRead, SIGNAL(triggered()), this, SLOT(HandleReadSettings()));
     connect(ui->actionSet, SIGNAL(triggered()), this, SLOT(HandleApplySettings()));
     connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(HandleSaveSettings()));
+    connect(ui->actionBootloader, SIGNAL(triggered()), this, SLOT(ToBootloader()));
     connect(ui->pushSensor1AccCalibrate, SIGNAL(clicked()), this, SLOT(HandleAccCalibrate()));
     connect(ui->pushSensor1GyroCalibrate, SIGNAL(clicked()), this, SLOT(HandleGyroCalibrate()));
     connect(&m_timer, SIGNAL(timeout()), this, SLOT(ProcessTimeout()));
@@ -485,6 +486,25 @@ void MainWindow::HandleSaveSettings()
         // Don't bug the user until next change
         m_deadtimeChanged = false;
     }
+}
+
+/**
+ * @brief MainWindow::ToBootloader
+ */
+void MainWindow::ToBootloader()
+{
+    m_msg.sof  = TELEMETRY_MSG_SOF;
+    m_msg.size = TELEMETRY_MSG_SIZE_BYTES + 1;
+    m_msg.res  = 0;
+
+    /* Clean data buffer for zero-padded crc32 checksum calculation. */
+    memset((void *)m_msg.data, 0, TELEMETRY_BUFFER_SIZE);
+
+    /* Reset the board and enter bootloader. */
+    m_msg.msg_id  = 'X';
+    m_msg.data[0] = 1;
+    m_msg.crc     = GetCRC32Checksum(m_msg);
+    SerialDataWrite(m_msg);
 }
 
 /**

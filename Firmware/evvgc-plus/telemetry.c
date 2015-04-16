@@ -27,6 +27,7 @@
 #include "eeprom.h"
 #include "misc.h"
 #include "usbcfg.h"
+#include "main.h"
 
 /* Predefined telemetry responses. */
 #define TELEMETRY_RESP_OK         "_OK_"
@@ -180,6 +181,17 @@ static void telemetryProcessCommand(const PMessage pMsg) {
     memcpy((void *)pMsg->data, (void *)g_IMU1.accelData, sizeof(g_IMU1.accelData));
     pMsg->size = sizeof(g_IMU1.accelData) + TELEMETRY_MSG_SVC_SIZE;
     pMsg->crc  = telemetryGetCRC32Checksum(pMsg);
+  case 'X': /* Reboot the board. */
+    if ((pMsg->size - TELEMETRY_MSG_SVC_SIZE) == sizeof(uint8_t)) {
+      telemetryPositiveResponse(pMsg);
+    } else {
+      telemetryNegativeResponse(pMsg);
+    }
+    if (pMsg->data[0] & JUMP_TO_ROM_BOOTLOADER) {
+      /* Set ROM boot loader request magic signature to the end of RAM; */
+      *((uint32_t *)(SYMVAL(__ram_end__) - 4)) = 0xDEADBEEF; // 0xC000 @ STM32F103RC
+    }
+    g_runMain = FALSE;
     break;
   case 'b': /* Outputs board status; */
     memcpy((void *)pMsg->data, (void *)&g_boardStatus, sizeof(g_boardStatus));
@@ -258,7 +270,7 @@ static void telemetryProcessCommand(const PMessage pMsg) {
     telemetryPositiveResponse(pMsg);
     break;
   case ']': /* Calibrate accelerometer. */
-    imuCalibrationSet(IMU1_CALIBRATE_ACCEL);
+    imuCalibrationSet(IMU1_CALIBRATE_ACC);
     telemetryPositiveResponse(pMsg);
     break;
   case 'l': /* Outputs last debug message. */
@@ -267,25 +279,6 @@ static void telemetryProcessCommand(const PMessage pMsg) {
     pMsg->size = debugMsg.size;
     pMsg->crc  = telemetryGetCRC32Checksum(&debugMsg);
     debugMsg.size = 0;
-    break;
-  case 'X': /* Hard reset the board. */
-    telemetryPositiveResponse(pMsg);
-
-    chThdSleepMilliseconds(100);
-
-    chSysLockFromIsr();
-    /* disconnect USB */
-    usbStop(serusbcfg.usbp);
-    usbDisconnectBus(serusbcfg.usbp);
-    chThdSleepMilliseconds(2000);
-    usbConnectBus(serusbcfg.usbp);
-    chSysDisable();
-
-    SCB_AIRCR = (u32)AIRCR_VECTKEY | 0x04;
-
-    while (1) {
-      asm volatile("nop");
-    }
     break;
   default: /* Unknown command. */
     telemetryNegativeResponse(pMsg);

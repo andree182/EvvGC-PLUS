@@ -53,14 +53,6 @@
 #define MPU6050_ACCEL_SCALE         (GRAV /  4096.0f) //  8G
 //#define MPU6050_ACCEL_SCALE         (GRAV /  2048.0f) // 16G
 
-#define IMU1_CALIBRATE_GYRO         0x00000008
-#define IMU1_CALIBRATE_ACCEL        0x00000010
-#define IMU1_CALIBRATION_MASK       0x00000018
-#define IMU2_CALIBRATE_GYRO         0x00000020
-#define IMU2_CALIBRATE_ACCEL        0x00000040
-#define IMU2_CALIBRATION_MASK       0x00000060
-#define IMU_CALIBRATION_MASK        0x00000078
-
 #define IMU_AXIS_DIR_POS            0x08
 #define IMU_AXIS_ID_MASK            0x07
 

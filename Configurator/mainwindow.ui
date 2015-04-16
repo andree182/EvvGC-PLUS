@@ -2013,6 +2013,8 @@
     <addaction name="actionRead"/>
     <addaction name="actionSet"/>
     <addaction name="actionSave"/>
+    <addaction name="separator"/>
+    <addaction name="actionBootloader"/>
    </widget>
    <addaction name="menuBoard"/>
   </widget>
@@ -2087,6 +2089,11 @@
    </property>
    <property name="shortcut">
     <string>F3</string>
+   </property>
+  </action>
+  <action name="actionBootloader">
+   <property name="text">
+    <string>To Bootloader</string>
    </property>
   </action>
  </widget>

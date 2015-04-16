@@ -214,6 +214,12 @@ extern funcp_t __fini_array_start;
  */
 extern funcp_t __fini_array_end;
 
+/**
+ * @brief   End of RAM.
+ * @pre     The symbol must be aligned to a 32 bits boundary.
+ */
+extern uint32_t __ram_end__;
+
 /** @} */
 
 /**
@@ -267,6 +273,15 @@ __attribute__((naked))
 #endif
 void ResetHandler(void) {
   uint32_t psp, reg;
+
+  /* Look at the last double word in RAM for magic signature. */
+  uint32_t *magic_signature = (uint32_t *)(SYMVAL(__ram_end__) - 4);
+  if (*magic_signature == 0xDEADBEEF) {
+    /* Reset magic signature; */
+    *magic_signature = 0;
+    /* Jump into ROM boot loader. */
+    ((funcp_t) (*(uint32_t *)0x1FFFF004))();
+  }
 
   /* Process Stack initialization, it is allocated starting from the
      symbol __process_stack_end__ and its lower limit is the symbol

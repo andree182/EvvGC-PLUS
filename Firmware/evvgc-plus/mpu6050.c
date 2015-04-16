@@ -30,6 +30,7 @@
 #include "mpu6050.h"
 #include "misc.h"
 #include "telemetry.h"
+#include "main.h"
 
 #define MPU6050_RX_BUF_SIZE   0x0E
 #define MPU6050_TX_BUF_SIZE   0x05

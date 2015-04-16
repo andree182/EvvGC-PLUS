@@ -99,6 +99,7 @@ private slots:
     void HandleReadSettings();
     void HandleApplySettings(bool warnDeadTimeChange = true);
     void HandleSaveSettings();
+    void ToBootloader();
     void ProcessTimeout();
     void HandleDataXClicked();
     void HandleDataYClicked();
