@@ -478,7 +478,7 @@ void MainWindow::HandleSaveSettings()
             QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes
         );
         if (reply == QMessageBox::Yes) {
-            SerialDataWrite('X', NULL, 0);
+            ToBootloader(REBOOT_FLAG_RESET);
 
             SerialConnect(); // Disconnect actually...
         }
@@ -491,7 +491,7 @@ void MainWindow::HandleSaveSettings()
 /**
  * @brief MainWindow::ToBootloader
  */
-void MainWindow::ToBootloader()
+void MainWindow::ToBootloader(quint8 flag)
 {
     m_msg.sof  = TELEMETRY_MSG_SOF;
     m_msg.size = TELEMETRY_MSG_SIZE_BYTES + 1;
@@ -502,7 +502,7 @@ void MainWindow::ToBootloader()
 
     /* Reset the board and enter bootloader. */
     m_msg.msg_id  = 'X';
-    m_msg.data[0] = 1;
+    m_msg.data[0] = flag;
     m_msg.crc     = GetCRC32Checksum(m_msg);
     SerialDataWrite(m_msg);
 }

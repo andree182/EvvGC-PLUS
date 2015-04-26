@@ -41,6 +41,10 @@
 #define SENSOR2_AXIS_DIR_POS    0x80
 #define SENSOR2_AXIS_ID_MASK    0x70
 
+#define REBOOT_FLAG_RESET          0x00
+#define REBOOT_FLAG_ROM_BOOTLOADER 0x01
+#define REBOOT_FLAG_USB_BOOTLOADER 0x02
+
 typedef struct tagPIDSettings
 {
     quint8 P;
@@ -99,7 +103,7 @@ private slots:
     void HandleReadSettings();
     void HandleApplySettings(bool warnDeadTimeChange = true);
     void HandleSaveSettings();
-    void ToBootloader();
+    void ToBootloader(quint8 flags = REBOOT_FLAG_ROM_BOOTLOADER);
     void ProcessTimeout();
     void HandleDataXClicked();
     void HandleDataYClicked();

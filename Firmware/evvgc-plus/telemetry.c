@@ -188,7 +188,7 @@ static void telemetryProcessCommand(const PMessage pMsg) {
       telemetryNegativeResponse(pMsg);
     }
     /* Set ROM boot loader request magic signature to the end of RAM; */
-     // 0xC000 @ STM32F103RC
+    // 0xC000 @ STM32F103RC
     if (pMsg->data[0] & JUMP_TO_ROM_BOOTLOADER) {
       *((uint32_t *)(SYMVAL(__ram_end__) - 4)) = 0xDEADBEEF;
     } else if (pMsg->data[0] & JUMP_TO_USB_BOOTLOADER) {
