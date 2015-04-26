@@ -29,6 +29,7 @@
 #define IMU_CALIBRATION_MASK    0x00000078
 
 #define JUMP_TO_ROM_BOOTLOADER  0x01
+#define JUMP_TO_USB_BOOTLOADER  0x02
 
 #define SYMVAL(sym) (uint32_t)(((uint8_t *)&(sym)) - ((uint8_t *)0))
 
