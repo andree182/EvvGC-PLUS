@@ -26,6 +26,12 @@ Documentation
 Check the [wiki page](https://github.com/andree182/EvvGC-PLUS/wiki)
 
 
+License
+=======
+
+The code license is GPLv3 for the ChibiOS part and Apache for the EvvGC-PLUS part (permitted by ChibiOS license).
+
+
 Maintenance
 ===========
 
