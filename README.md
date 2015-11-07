@@ -1,6 +1,12 @@
 #EvvGC-PLUS
 Open source software and firmware hobby project for EvvGC brushless gimbal controller v1.x.
 
+  * Firmware for STM32F103xC series microcontroller
+  * Configurator Tool
+
+Note that the project is incompatible with the original evvgc.
+
+
 Features
 ========
 
@@ -18,6 +24,7 @@ Features
 Documentation
 =============
 Check the [wiki page](https://github.com/andree182/EvvGC-PLUS/wiki)
+
 
 Maintenance
 ===========
